@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Upload Stock Data</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="id_file" class="form-label">Upload CSV or Excel file</label>
+                            <input type="file" name="file" class="form-control" id="id_file" required>
+                            <div class="form-text">Only CSV and Excel files are allowed.</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_ticker_column" class="form-label">Ticker column name</label>
+                            <input type="text" name="ticker_column" class="form-control" id="id_ticker_column" value="ticker" required>
+                            <div class="form-text">Name of the column containing ticker symbols</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_date_column" class="form-label">Date column name</label>
+                            <input type="text" name="date_column" class="form-control" id="id_date_column" value="date" required>
+                            <div class="form-text">Name of the column containing dates</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_price_column" class="form-label">Price column name</label>
+                            <input type="text" name="price_column" class="form-control" id="id_price_column" value="close" required>
+                            <div class="form-text">Name of the column containing closing prices</div>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <h5>File Format Requirements:</h5>
+                            <ul>
+                                <li>CSV format only (for now)</li>
+                                <li>Must contain columns for ticker, date, and close price</li>
+                                <li>Date format: MM/DD/YYYY or YYYY-MM-DD</li>
+                                <li>Sample format:
+                                    <pre class="mt-2 bg-light p-3">
+ticker,date,close
+omn-za,12/29/2006,62.2
+omn-za,1/2/2007,62.2
+omn-za,1/3/2007,62
+afe-za,3/15/2017,111.81
+afe-za,3/16/2017,114.34
+                                    </pre>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">Upload</button>
+                        <a href="{% url 'stocks:dashboard' %}" class="btn btn-secondary">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

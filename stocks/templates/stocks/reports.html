@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+
+{% block title %}Stock Analysis Reports{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mt-4 mb-4">
+        <div>
+            <h1 class="h2 mb-0">
+                <i class="bi bi-file-earmark-text me-2"></i>Stock Analysis Reports
+            </h1>
+            <p class="text-muted mb-0">Generate and view analysis reports</p>
+        </div>
+        <div>
+            <a href="{% url 'stocks:dashboard' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Generate Report Form -->
+    <div class="row mb-4">
+        <div class="col-lg-6">
+            <div class="card shadow">
+                <div class="card-header bg-white py-3">
+                    <h6 class="m-0 fw-bold text-primary">
+                        <i class="bi bi-plus-circle me-2"></i>Generate New Report
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'stocks:reports' %}">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="start_date" class="form-label">Start Date</label>
+                                <input type="date" class="form-control" id="start_date" name="start_date" 
+                                       value="{{ default_start|default:'' }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="end_date" class="form-label">End Date</label>
+                                <input type="date" class="form-control" id="end_date" name="end_date" 
+                                       value="{{ default_end|default:'' }}" required>
+                            </div>
+                        </div>
+                        <div class="alert alert-info">
+                            <small>
+                                <i class="bi bi-info-circle me-1"></i>
+                                The report will analyse trading signals for all organisations within the selected date range.
+                            </small>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-gear me-1"></i>Generate Report
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card shadow">
+                <div class="card-header bg-white py-3">
+                    <h6 class="m-0 fw-bold text-primary">
+                        <i class="bi bi-info-circle me-2"></i>Report Information
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <h6>What's in a Report?</h6>
+                    <ul class="small mb-3">
+                        <li>Performance summary for all organisations</li>
+                        <li>Total BUY/SELL/HOLD signals generated</li>
+                        <li>Success rate of BUY signals</li>
+                        <li>Average price drop for BUY signals</li>
+                        <li>Average expected profit</li>
+                    </ul>
+                    
+                    <h6>Analysis Period</h6>
+                    <p class="small text-muted">
+                        Reports analyse data based on the trading algorithm:
+                    </p>
+                    <ul class="small">
+                        <li><strong>BUY:</strong> Price drop ≥ 3% from previous day</li>
+                        <li><strong>SELL:</strong> 5 days after successful BUY</li>
+                        <li><strong>HOLD:</strong> All other positions</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Existing Reports -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 fw-bold text-primary">
+                        <i class="bi bi-clock-history me-2"></i>Previous Reports
+                    </h6>
+                    <span class="badge bg-primary">{{ reports|length }} reports</span>
+                </div>
+                <div class="card-body p-0">
+                    {% if reports %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4">Report Title</th>
+                                    <th>Period</th>
+                                    <th>Generated</th>
+                                    <th>Success Rate</th>
+                                    <th class="text-end pe-4">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for report in reports %}
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="fw-bold">{{ report.title }}</div>
+                                        <small class="text-muted">ID: #{{ report.id }}</small>
+                                    </td>
+                                    <td>
+                                        {{ report.start_date|date:"d M Y" }} - {{ report.end_date|date:"d M Y" }}
+                                    </td>
+                                    <td>
+                                        <div>{{ report.generated_date|date:"d M Y" }}</div>
+                                        <small class="text-muted">{{ report.generated_date|time:"H:i" }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if report.success_rate >= 50 %}bg-success{% else %}bg-warning{% endif %}">
+                                            {{ report.success_rate }}%
+                                        </span>
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <a href="{% url 'stocks:report_detail' report.id %}" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye me-1"></i>View
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <div class="text-muted">
+                            <i class="bi bi-file-earmark-x fa-3x mb-3"></i>
+                            <h5>No reports generated yet</h5>
+                            <p>Generate your first report using the form above</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
