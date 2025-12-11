@@ -1,0 +1,285 @@
+
+{% extends 'base.html' %}
+
+{% block title %}{{ organisation.ticker }} - Stock Analysis{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mt-4 mb-4">
+        <div>
+            <h1 class="h2 mb-0">
+                <i class="bi bi-graph-up me-2"></i>{{ organisation.ticker }}
+            </h1>
+            <p class="text-muted mb-0">
+                {% if organisation.name %}{{ organisation.name }}{% endif %}
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'stocks:dashboard' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Check if we have data -->
+    {% if signals and summary %}
+    <!-- Performance Summary -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-primary border-4 shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col me-2">
+                            <div class="text-xs fw-bold text-primary text-uppercase mb-1">
+                                Price Records
+                            </div>
+                            <div class="h5 mb-0 fw-bold text-gray-800">{{ total_prices }}</div>
+                            <div class="mt-2 text-xs">
+                                <i class="bi bi-database me-1"></i>Historical data points
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-database fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-success border-4 shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col me-2">
+                            <div class="text-xs fw-bold text-success text-uppercase mb-1">
+                                Success Rate
+                            </div>
+                            <div class="h5 mb-0 fw-bold text-gray-800">{{ summary.success_rate|default:"0" }}%</div>
+                            <div class="mt-2 text-xs">
+                                <i class="bi bi-check-circle me-1"></i>Profitable BUY signals
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-info border-4 shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col me-2">
+                            <div class="text-xs fw-bold text-info text-uppercase mb-1">
+                                BUY Signals
+                            </div>
+                            <div class="h5 mb-0 fw-bold text-gray-800">{{ summary.buy_signals|default:"0" }}</div>
+                            <div class="mt-2 text-xs">
+                                <i class="bi bi-arrow-up-circle me-1"></i>Investment opportunities
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-arrow-up-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-warning border-4 shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col me-2">
+                            <div class="text-xs fw-bold text-warning text-uppercase mb-1">
+                                Avg. Profit
+                            </div>
+                            <div class="h5 mb-0 fw-bold text-gray-800">{{ summary.avg_profit|default:"0" }}%</div>
+                            <div class="mt-2 text-xs">
+                                <i class="bi bi-cash-stack me-1"></i>Expected return
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-cash-stack fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Trading Signals -->
+    <div class="row">
+        <div class="col-lg-8 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-white py-3">
+                    <h6 class="m-0 fw-bold text-primary">
+                        <i class="bi bi-lightning-charge me-2"></i>Recent Trading Signals
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4">Date</th>
+                                    <th>Signal</th>
+                                    <th>Close Price</th>
+                                    <th>Price Drop</th>
+                                    <th>Expected Profit</th>
+                                    <th class="text-end pe-4">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for signal in signals %}
+                                <tr>
+                                    <td class="ps-4">
+                                        {% if signal.date %}
+                                            {{ signal.date|date:"Y-m-d" }}
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if signal.signal == 'buy' %}bg-success
+                                            {% elif signal.signal == 'sell' %}bg-danger
+                                            {% else %}bg-warning text-dark{% endif %}">
+                                            {{ signal.signal|default:"hold"|upper }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if signal.close_price %}
+                                            R{{ signal.close_price|floatformat:2 }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if signal.price_drop %}
+                                        <span class="text-danger">
+                                            <i class="bi bi-arrow-down me-1"></i>{{ signal.price_drop|floatformat:2 }}%
+                                        </span>
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if signal.expected_profit %}
+                                        <span class="text-success">
+                                            <i class="bi bi-arrow-up me-1"></i>{{ signal.expected_profit|floatformat:2 }}%
+                                        </span>
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        {% if signal.signal == 'buy' %}
+                                        <span class="badge bg-success">Execute BUY</span>
+                                        {% elif signal.signal == 'sell' %}
+                                        <span class="badge bg-danger">Execute SELL</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Hold Position</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-5">
+                                        <div class="text-muted">
+                                            <i class="bi bi-bell-slash fa-3x mb-3"></i>
+                                            <h5>No signals available</h5>
+                                            <p>Insufficient data for analysis</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Algorithm & Summary -->
+        <div class="col-lg-4">
+            <!-- Algorithm Card -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-white py-3">
+                    <h6 class="m-0 fw-bold text-primary">
+                        <i class="bi bi-cpu me-2"></i>Trading Algorithm
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-light border">
+                        <h6 class="alert-heading fw-bold">3% Drop Rule</h6>
+                        <p class="small mb-2">Signals generated based on:</p>
+                        <ul class="small mb-0">
+                            <li><strong>BUY:</strong> Price drops 3%+ from previous day</li>
+                            <li><strong>SELL:</strong> 5 days after successful BUY</li>
+                            <li><strong>HOLD:</strong> All other positions</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Summary -->
+            <div class="card shadow">
+                <div class="card-header bg-white py-3">
+                    <h6 class="m-0 fw-bold text-primary">
+                        <i class="bi bi-graph-up-arrow me-2"></i>Performance Summary
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6 mb-3">
+                            <div class="h4 fw-bold">{{ summary.buy_signals|default:"0" }}</div>
+                            <div class="text-muted small">BUY Signals</div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="h4 fw-bold">{{ summary.sell_signals|default:"0" }}</div>
+                            <div class="text-muted small">SELL Signals</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="h4 fw-bold text-success">{{ summary.success_rate|default:"0" }}%</div>
+                            <div class="text-muted small">Success Rate</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="h4 fw-bold text-info">{{ summary.avg_profit|default:"0" }}%</div>
+                            <div class="text-muted small">Avg Profit</div>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="small text-muted">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Based on {{ summary.total_days|default:"0" }} days of analysis
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <!-- No Data Message -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-body text-center py-5">
+                    <div class="text-muted">
+                        <i class="bi bi-exclamation-triangle fa-3x mb-3"></i>
+                        <h3>Insufficient Data</h3>
+                        <p class="mb-4">We need at least 6 days of price data to generate trading signals.</p>
+                        <p>Current data: {{ total_prices|default:"0" }} price records</p>
+                        <a href="{% url 'stocks:upload' %}" class="btn btn-primary mt-3">
+                            <i class="bi bi-cloud-upload me-1"></i>Upload More Data
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
